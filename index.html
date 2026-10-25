@@ -148,6 +148,13 @@
   .note b{color:var(--warn)}
   .hashline{font-family:var(--mono); font-size:11.5px; color:var(--dim); word-break:break-all; margin-top:12px}
 
+  .brewbanner{display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(34,211,238,.07),var(--panel)); border:1px solid var(--line2);
+    border-radius:12px; padding:16px 18px; margin-bottom:22px}
+  .brewbanner .lbl{font-family:var(--mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--cyan); display:block; margin-bottom:5px}
+  .brewbanner code{font-family:var(--mono); font-size:15px; color:#cfe8ff; display:block; overflow-x:auto}
+  .copybtn{font-family:var(--mono); font-size:12px; font-weight:700; border:1px solid var(--line2); background:var(--bg2); color:var(--ink); border-radius:8px; padding:9px 15px; cursor:pointer; flex:0 0 auto}
+  .copybtn:hover{border-color:var(--cyan)} .copybtn.done{color:var(--ok); border-color:var(--ok)}
   footer{padding-block:48px; color:var(--mut); font-size:14px}
   footer .wrap{display:flex; gap:26px; flex-wrap:wrap; align-items:flex-start}
   footer .col{min-width:0}
@@ -276,9 +283,13 @@
   <div class="wrap center">
     <div class="kicker">download</div>
     <h2 class="h2">Install Vibe Check</h2>
-    <p class="sub">One universal macOS build runs on Intel and Apple Silicon. It's a terminal app: it opens, audits the bundled sandbox so you know it works, and prints the command to scan something of your own.</p>
+    <p class="sub">Runs on Intel and Apple Silicon. It's a terminal app: it opens, audits the bundled sandbox so you know it works, and prints the command to scan something of your own.</p>
   </div>
   <div class="wrap">
+    <div class="brewbanner">
+      <div style="min-width:0"><span class="lbl">Homebrew &middot; one line</span><code id="brewcmd">brew install --cask chickenswaffle/tap/vibe-check</code></div>
+      <button class="copybtn" id="copybrew" type="button">Copy</button>
+    </div>
     <div class="dlrow">
       <div class="dlcard macos">
         <h3>macOS app <span class="chip" style="background:var(--cyan)">.dmg</span></h3>
@@ -419,6 +430,22 @@ vibe-check scan http://localhost:3000 --report .</code></pre>
       document.getElementById("dl-macos").href = RELEASE;
       var hero = document.querySelector(".cta .btn-primary"); if (hero) hero.href = RELEASE;
     }
+  })();
+
+  /* ---- copy the brew command ---- */
+  (function(){
+    var cb = document.getElementById("copybrew"); if (!cb) return;
+    cb.addEventListener("click", function(){
+      var txt = document.getElementById("brewcmd").textContent;
+      function flash(){ cb.textContent = "Copied"; cb.classList.add("done");
+        setTimeout(function(){ cb.textContent = "Copy"; cb.classList.remove("done"); }, 1600); }
+      try{
+        navigator.clipboard.writeText(txt).then(flash, function(){
+          var r = document.createRange(); r.selectNodeContents(document.getElementById("brewcmd"));
+          var s = getSelection(); s.removeAllRanges(); s.addRange(r); flash();
+        });
+      }catch(e){ flash(); }
+    });
   })();
 })();
 </script>
