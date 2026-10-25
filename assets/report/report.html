@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibe Check — http://127.0.0.1:8099</title>
+<style>
+  :root { color-scheme: dark; --bg:#070b14; --panel:#0b1120; --line:#172036;
+           --cyan:#22d3ee; --mag:#ff3d81; --ink:#e6edf6; --mut:#8591a8; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+          font:15px/1.6 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .mono, code, pre { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 16px; }
+  .topbar { height:3px; background:linear-gradient(90deg,var(--cyan),var(--mag)); }
+  header { border-bottom:1px solid var(--line); background:linear-gradient(180deg,#0a1222,#070b14); }
+  .brand { font-weight:800; letter-spacing:2px; font-size:21px; padding:22px 0 2px;
+            background:linear-gradient(90deg,var(--cyan),var(--mag));
+            -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub { color:var(--mut); font-size:13px; padding-bottom:20px; }
+  .verdict { margin:20px 0 14px; padding:14px 18px; border-radius:10px; font-weight:800; letter-spacing:.3px; }
+  .verdict.crit { background:var(--mag); color:#0a0a0a; }
+  .verdict.warn { background:#f5b14a; color:#111; }
+  .verdict.ok { background:#34c759; color:#06230f; }
+  .badge { display:inline-block; padding:3px 12px; border-radius:999px; color:#0a0a0a;
+            font-weight:800; font-size:12px; margin:0 6px 6px 0; }
+  .badge.ok { background:#34c759; }
+  section { margin:28px 0; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:1.5px; color:var(--cyan);
+        border-bottom:1px solid var(--line); padding-bottom:7px; }
+  h2 small { text-transform:none; letter-spacing:0; color:var(--mut); font-weight:400; }
+  .card { border:1px solid var(--line); border-left-width:4px; border-radius:10px;
+           padding:16px 18px; margin:14px 0; background:var(--panel); }
+  .card h3 { margin:0 0 6px; font-size:16px; }
+  .card .cls { color:var(--mut); font-size:12px; margin-bottom:10px; }
+  .sevtag { display:inline-block; padding:2px 9px; border-radius:5px; color:#0a0a0a;
+             font-weight:800; font-size:11px; letter-spacing:.5px; margin-right:9px; }
+  pre { background:#05080f; border:1px solid var(--line); border-radius:8px; padding:11px;
+         overflow:auto; font-size:12.5px; margin:9px 0; color:#bfe9f3; }
+  code { color:var(--cyan); }
+  .fix { background:#07160e; border:1px solid #123a23; border-radius:8px; padding:10px 13px; color:#c7f0d6; }
+  .muted { color:var(--mut); } .why { color:#c6d0de; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; color:var(--mut); font-weight:600; border-bottom:1px solid var(--line); padding:6px 8px; }
+  td { border-bottom:1px solid #121a2b; padding:6px 8px; }
+  ul.susp { list-style:none; padding:0; } ul.susp li { padding:4px 0; color:var(--mut); }
+  footer { color:#4b5566; font-size:12px; padding:34px 0; text-align:center; }
+</style></head>
+<body>
+<div class="topbar"></div>
+<header><div class="wrap">
+  <div class="brand">VIROBIT // VIBE CHECK</div>
+  <div class="sub">http://127.0.0.1:8099 · generated 2026-10-25 18:13 UTC · authorization: VulnLab sandbox (localhost demo)</div>
+</div></header>
+<div class="wrap">
+  <div class="verdict crit">VERDICT — GRADE F — 19 confirmed, fix before you ship</div>
+  <div><span class="badge" style="background:#ff3d81">CRITICAL × 7</span><span class="badge" style="background:#ff6b6b">HIGH × 3</span><span class="badge" style="background:#f5b14a">MEDIUM × 8</span><span class="badge" style="background:#8591a8">INFO × 1</span></div>
+  <p class="muted">Every confirmed finding was re-executed and re-confirmed by the engine.
+     Suspicions were proposed but could not be proven and do not count toward the verdict.</p>
+  
+  <section><h2>Confirmed findings</h2><div class='card' style='border-left-color:#ff3d81'><h3><span class='sevtag' style='background:#ff3d81'>CRITICAL</span>Exposed .env file (secrets served from web root)</h3><div class='cls'>class: sensitive-file-exposure</div><p class='why'><b>Why it matters:</b> Your .env — database URLs, API keys, JWT secrets — is downloadable by anyone.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:12 UTC):</div><pre>GET http://127.0.0.1:8099/.env</pre><div class='muted'>Response <code>200</code>:</div><pre>DATABASE_URL=postgres://user:pw@localhost/db
+STRIPE_SECRET_KEY=***redacted***
+JWT_SECRET=***redacted***
+</pre><div class='muted'>Checks confirmed:</div><ul><li>body is KEY=VALUE environment config</li><li>response is the real file, not an SPA catch-all page</li></ul><div class='fix'><b>Fix:</b> Stop serving dotfiles from the web root, move secrets out of the served directory, and ROTATE every key that was exposed.</div></div>
+<div class='card' style='border-left-color:#ff3d81'><h3><span class='sevtag' style='background:#ff3d81'>CRITICAL</span>Exposed SQL database dump (backup.sql)</h3><div class='cls'>class: backup-file-exposure</div><p class='why'><b>Why it matters:</b> /backup.sql is downloadable by anyone — a database dump or config backup hands over your data and secrets wholesale.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:12 UTC):</div><pre>GET http://127.0.0.1:8099/backup.sql</pre><div class='muted'>Response <code>200</code>:</div><pre>-- MySQL dump
+CREATE TABLE users (id INT, email TEXT, password_hash TEXT);
+INSERT INTO users VALUES (1, &#x27;alice@example.com&#x27;, &#x27;$2b$...&#x27;);
+</pre><div class='muted'>Checks confirmed:</div><ul><li>/backup.sql carries a real backup/dump signature</li></ul><div class='fix'><b>Fix:</b> Remove backup/dump files from the web root and block dotfile/backup extensions at the web server; rotate anything exposed.</div></div>
+<div class='card' style='border-left-color:#ff3d81'><h3><span class='sevtag' style='background:#ff3d81'>CRITICAL</span>Stripe secret key exposed in client code</h3><div class='cls'>class: client-secret-exposure</div><p class='why'><b>Why it matters:</b> A Stripe SECRET key is shipped to the browser — anyone who views source can charge cards and issue refunds on your account.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:12 UTC):</div><pre>GET http://127.0.0.1:8099/app.js</pre><div class='muted'>Response <code>200</code>:</div><pre>const API = &#x27;/api&#x27;;
+const STRIPE_SECRET_KEY = &#x27;***redacted***&#x27;;
+const AWS_ACCESS_KEY_ID = &#x27;***redacted***&#x27;;
+</pre><div class='muted'>Checks confirmed:</div><ul><li>Stripe secret key pattern present in the response</li></ul><div class='fix'><b>Fix:</b> Move the secret key server-side, use only the publishable key client-side, and rotate the exposed key now.</div></div>
+<div class='card' style='border-left-color:#ff3d81'><h3><span class='sevtag' style='background:#ff3d81'>CRITICAL</span>AWS access key id exposed in client code</h3><div class='cls'>class: client-secret-exposure</div><p class='why'><b>Why it matters:</b> An AWS access key id is embedded in client code — a path to full cloud-account abuse if the secret is nearby or reused.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:12 UTC):</div><pre>GET http://127.0.0.1:8099/app.js</pre><div class='muted'>Response <code>200</code>:</div><pre>const API = &#x27;/api&#x27;;
+const STRIPE_SECRET_KEY = &#x27;***redacted***&#x27;;
+const AWS_ACCESS_KEY_ID = &#x27;***redacted***&#x27;;
+</pre><div class='muted'>Checks confirmed:</div><ul><li>AWS access key id pattern present in the response</li></ul><div class='fix'><b>Fix:</b> Remove AWS credentials from the frontend and rotate the key immediately.</div></div>
+<div class='card' style='border-left-color:#ff3d81'><h3><span class='sevtag' style='background:#ff3d81'>CRITICAL</span>Guessable password-reset token on /password-reset</h3><div class='cls'>class: weak-reset-token</div><p class='why'><b>Why it matters:</b> The reset token is only 9 characters (low entropy, brute-forceable), so an attacker can guess it outright. A leaked or guessable reset token is full account takeover — the single most damaging bug a vibe-coded auth flow ships with.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/password-reset?email=vibe-check-probe@example.com</pre><div class='muted'>Response <code>200</code>:</div><pre>{&quot;reset_link&quot;:&quot;http://127.0.0.1:8099/reset?token=secret123&quot;}</pre><div class='muted'>Checks confirmed:</div><ul><li>the response body leaks a reset/login token</li></ul><div class='fix'><b>Fix:</b> Never return the reset token in the API response — email a link to the registered address only. Use a cryptographically random token (&gt;=32 chars), single-use, short-lived, and rate-limit the reset endpoint.</div></div>
+<div class='card' style='border-left-color:#ff3d81'><h3><span class='sevtag' style='background:#ff3d81'>CRITICAL</span>Password-reset token exposed in the response on /api/password/forgot</h3><div class='cls'>class: weak-reset-token</div><p class='why'><b>Why it matters:</b> The reset token is returned in the HTTP response instead of being emailed, so anyone who can call this endpoint can take over the account. A leaked or guessable reset token is full account takeover — the single most damaging bug a vibe-coded auth flow ships with.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/api/password/forgot?email=vibe-check-probe@example.com</pre><div class='muted'>Response <code>200</code>:</div><pre>{&quot;ok&quot;:true,&quot;email&quot;:&quot;vibe-check-probe@example.com&quot;,&quot;reset_token&quot;:&quot;b7e2a1c9f04d4e5a8c3b6d9e1f2a7c84&quot;,&quot;reset_url&quot;:&quot;http://localhost/reset?token=b7e2a1c9f04d4e5a8c3b6d9e1f2a7c84&quot;}</pre><div class='muted'>Checks confirmed:</div><ul><li>the response body leaks a reset/login token</li></ul><div class='fix'><b>Fix:</b> Never return the reset token in the API response — email a link to the registered address only. Use a cryptographically random token (&gt;=32 chars), single-use, short-lived, and rate-limit the reset endpoint.</div></div>
+<div class='card' style='border-left-color:#ff3d81'><h3><span class='sevtag' style='background:#ff3d81'>CRITICAL</span>Cross-account object read (IDOR/BOLA) on /api/invoices/{id}</h3><div class='cls'>class: idor</div><p class='why'><b>Why it matters:</b> Two different logged-in users (alice and bob) receive the same private object at /api/invoices/117. The endpoint never checks ownership, so any authenticated user can read anyone else&#x27;s records.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/api/invoices/117
+Authorization: ***masked***</pre><div class='muted'>Response <code>200</code>:</div><pre>{&quot;owner&quot;:&quot;alice&quot;,&quot;owner_email&quot;:&quot;alice@example.com&quot;,&quot;total&quot;:1200}</pre><div class='muted'>Checks confirmed:</div><ul><li>bob received byte-identical data to alice</li></ul><div class='fix'><b>Fix:</b> Enforce an ownership/authorization check (object.owner_id == the current user) before returning the object; return 403 otherwise.</div></div>
+<div class='card' style='border-left-color:#ff6b6b'><h3><span class='sevtag' style='background:#ff6b6b'>HIGH</span>CORS reflects any origin with credentials on /api/me</h3><div class='cls'>class: cors-misconfiguration</div><p class='why'><b>Why it matters:</b> The endpoint echoes any website&#x27;s Origin and allows credentials, so a malicious site can read this authenticated response from a logged-in user&#x27;s browser.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:12 UTC):</div><pre>GET http://127.0.0.1:8099/api/me
+Origin: https://evil.example</pre><div class='muted'>Response <code>200</code>:</div><pre>{&quot;user&quot;:&quot;anonymous&quot;}</pre><div class='muted'>Checks confirmed:</div><ul><li>reflected the attacker Origin</li><li>allowed credentials cross-origin</li></ul><div class='fix'><b>Fix:</b> Never reflect the Origin header. Allow only an explicit allowlist of trusted origins, and don&#x27;t combine a wildcard origin with credentials.</div></div>
+<div class='card' style='border-left-color:#ff6b6b'><h3><span class='sevtag' style='background:#ff6b6b'>HIGH</span>Reflected input (likely XSS) via ?q= on /search</h3><div class='cls'>class: reflected-input</div><p class='why'><b>Why it matters:</b> The `q` parameter is reflected into the HTML response unencoded, so an attacker can inject script and run it in a victim&#x27;s browser (reflected XSS).</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/search?q=vck9z%3Csvg/onload%3D1%3E</pre><div class='muted'>Response <code>200</code>:</div><pre>&lt;!doctype html&gt;&lt;html&gt;&lt;body&gt;Results for: vck9z&lt;svg/onload=1&gt;&lt;/body&gt;&lt;/html&gt;</pre><div class='muted'>Checks confirmed:</div><ul><li>the HTML-breaking payload was reflected unencoded</li><li>in an HTML response</li></ul><div class='fix'><b>Fix:</b> Context-encode all user input on output (HTML-escape), and add a Content-Security-Policy as defense in depth.</div></div>
+<div class='card' style='border-left-color:#ff6b6b'><h3><span class='sevtag' style='background:#ff6b6b'>HIGH</span>Stack trace / debug output leaked on /api/calc</h3><div class='cls'>class: debug-disclosure</div><p class='why'><b>Why it matters:</b> The app returns internal stack traces or debug pages to clients, exposing file paths, framework internals and sometimes secrets — and it usually means debug mode is enabled in production.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/api/calc</pre><div class='muted'>Response <code>500</code>:</div><pre>Traceback (most recent call last):
+  File &quot;/Users/trading/ClaudeWorkspace/vibe-stresser/targets/vulnlab/app.py&quot;, line 71, in calc
+    return str(1 / int(x))
+               ~~^~~~~~~~
+ZeroDivisionError: division by zero
+</pre><div class='muted'>Checks confirmed:</div><ul><li>error/debug marker present in the response</li></ul><div class='fix'><b>Fix:</b> Turn off debug mode in production and return generic error pages; log the details server-side only.</div></div>
+<div class='card' style='border-left-color:#f5b14a'><h3><span class='sevtag' style='background:#f5b14a'>MEDIUM</span>Missing security headers (x-content-type-options, x-frame-options, content-security-policy, referrer-policy)</h3><div class='cls'>class: security-headers</div><p class='why'><b>Why it matters:</b> Without these headers the app is exposed in the browser to MIME-type sniffing, clickjacking, cross-site scripting and content injection, leaking URLs to third parties via the Referer header — cheap, high-value hardening a vibe-coded app almost always skips.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:12 UTC):</div><pre>GET http://127.0.0.1:8099/</pre><div class='muted'>Response <code>200</code>:</div><pre>VulnLab
+/api/invoices/117
+/api/invoices/118
+/api/signup
+/api/me
+/redirect
+/app.js
+/api/calc
+/search
+/health
+</pre><div class='muted'>Checks confirmed:</div><ul><li>x-content-type-options is not set on the response</li><li>x-frame-options is not set on the response</li><li>content-security-policy is not set on the response</li><li>referrer-policy is not set on the response</li></ul><div class='fix'><b>Fix:</b> Send `X-Content-Type-Options: nosniff`. Send `X-Frame-Options: DENY` (or a CSP `frame-ancestors &#x27;none&#x27;`). Add a restrictive `Content-Security-Policy`, e.g. `default-src &#x27;self&#x27;`. Send `Referrer-Policy: strict-origin-when-cross-origin`.</div></div>
+<div class='card' style='border-left-color:#f5b14a'><h3><span class='sevtag' style='background:#f5b14a'>MEDIUM</span>Session cookie &#x27;session&#x27; set without HttpOnly</h3><div class='cls'>class: insecure-cookie</div><p class='why'><b>Why it matters:</b> The &#x27;session&#x27; cookie is readable from JavaScript, so any XSS on the site can steal the session and impersonate the user.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:12 UTC):</div><pre>GET http://127.0.0.1:8099/login</pre><div class='muted'>Response <code>200</code>:</div><pre>logged in</pre><div class='muted'>Checks confirmed:</div><ul><li>a session cookie is set</li><li>the cookie lacks HttpOnly</li></ul><div class='fix'><b>Fix:</b> Set the cookie with HttpOnly (and Secure + SameSite): e.g. `Set-Cookie: session=...; HttpOnly; Secure; SameSite=Lax`.</div></div>
+<div class='card' style='border-left-color:#f5b14a'><h3><span class='sevtag' style='background:#f5b14a'>MEDIUM</span>Open redirect via ?url= on /redirect</h3><div class='cls'>class: open-redirect</div><p class='why'><b>Why it matters:</b> The `url` parameter sends users to any URL, so an attacker can craft a link on your domain that lands victims on a phishing site.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/redirect?url=https%3A%2F%2Fevil.example%2F</pre><div class='muted'>Response <code>302</code>:</div><pre></pre><div class='muted'>Checks confirmed:</div><ul><li>redirected off-site to the attacker URL</li></ul><div class='fix'><b>Fix:</b> Redirect only to a known allowlist of internal paths, or validate the target is same-origin before redirecting.</div></div>
+<div class='card' style='border-left-color:#f5b14a'><h3><span class='sevtag' style='background:#f5b14a'>MEDIUM</span>GraphQL introspection enabled on /graphql</h3><div class='cls'>class: graphql-introspection</div><p class='why'><b>Why it matters:</b> Introspection is on, so anyone can download your full GraphQL schema — every type, field and mutation — making the rest of the API trivial to attack.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>POST http://127.0.0.1:8099/graphql
+Content-Type: application/json
+
+{&quot;query&quot;:&quot;query{__schema{queryType{name}}}&quot;}</pre><div class='muted'>Response <code>200</code>:</div><pre>{&quot;data&quot;:{&quot;__schema&quot;:{&quot;queryType&quot;:{&quot;name&quot;:&quot;Query&quot;},&quot;types&quot;:[{&quot;name&quot;:&quot;User&quot;},{&quot;name&quot;:&quot;Invoice&quot;}]}}}</pre><div class='muted'>Checks confirmed:</div><ul><li>schema introspection returned the schema</li></ul><div class='fix'><b>Fix:</b> Disable introspection in production (e.g. the GraphQL server&#x27;s introspection flag), or gate it behind authentication.</div></div>
+<div class='card' style='border-left-color:#f5b14a'><h3><span class='sevtag' style='background:#f5b14a'>MEDIUM</span>Prometheus metrics endpoint exposed</h3><div class='cls'>class: exposed-management-endpoint</div><p class='why'><b>Why it matters:</b> Operational metrics (and often internal hostnames and counts) are public.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/metrics</pre><div class='muted'>Response <code>200</code>:</div><pre># HELP http_requests_total Total HTTP requests
+# TYPE http_requests_total counter
+http_requests_total 1337
+</pre><div class='muted'>Checks confirmed:</div><ul><li>response is a real /metrics endpoint</li></ul><div class='fix'><b>Fix:</b> Require authentication for /metrics or bind it to an internal network only.</div></div>
+<div class='card' style='border-left-color:#f5b14a'><h3><span class='sevtag' style='background:#f5b14a'>MEDIUM</span>Open directory listing at /files/</h3><div class='cls'>class: directory-listing</div><p class='why'><b>Why it matters:</b> Anyone can browse every file under /files/ — including backups, dumps and source that were never meant to be downloadable.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/files/</pre><div class='muted'>Response <code>200</code>:</div><pre>&lt;html&gt;&lt;head&gt;&lt;title&gt;Index of /files&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Index of /files&lt;/h1&gt;&lt;ul&gt;&lt;li&gt;backup.zip&lt;/li&gt;&lt;li&gt;db.sql&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</pre><div class='muted'>Checks confirmed:</div><ul><li>response is a directory autoindex page</li></ul><div class='fix'><b>Fix:</b> Turn off directory autoindex (e.g. nginx `autoindex off`) and serve an explicit index or 403 instead.</div></div>
+<div class='card' style='border-left-color:#f5b14a'><h3><span class='sevtag' style='background:#f5b14a'>MEDIUM</span>Exposed docker-compose.yml</h3><div class='cls'>class: exposed-config-file</div><p class='why'><b>Why it matters:</b> /docker-compose.yml is downloadable, exposing your service layout, image/registry names and pipeline — and sometimes embedded secrets.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/docker-compose.yml</pre><div class='muted'>Response <code>200</code>:</div><pre>version: &#x27;3&#x27;
+services:
+  web:
+    image: myapp:latest
+    environment:
+      - DB_PASSWORD=supersecret
+</pre><div class='muted'>Checks confirmed:</div><ul><li>/docker-compose.yml carries a /docker-compose.yml format signature</li></ul><div class='fix'><b>Fix:</b> Don&#x27;t deploy CI/infra config to the web root; block these filenames at the web server.</div></div>
+<div class='card' style='border-left-color:#f5b14a'><h3><span class='sevtag' style='background:#f5b14a'>MEDIUM</span>Host header reflected on /password-reset</h3><div class='cls'>class: host-header-injection</div><p class='why'><b>Why it matters:</b> The app trusts the Host header to build absolute links, so an attacker can set Host to their domain and poison password-reset links or caches.</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:13 UTC):</div><pre>GET http://127.0.0.1:8099/password-reset
+Host: evil.example</pre><div class='muted'>Response <code>200</code>:</div><pre>{&quot;reset_link&quot;:&quot;http://evil.example/reset?token=secret123&quot;}</pre><div class='muted'>Checks confirmed:</div><ul><li>the spoofed Host was reflected in the body</li></ul><div class='fix'><b>Fix:</b> Build absolute URLs from a configured canonical host, not the request Host header; validate Host against an allowlist.</div></div>
+<div class='card' style='border-left-color:#8591a8'><h3><span class='sevtag' style='background:#8591a8'>INFO</span>Technology disclosed via X-Powered-By (Express)</h3><div class='cls'>class: tech-disclosure</div><p class='why'><b>Why it matters:</b> The X-Powered-By header advertises &#x27;Express&#x27;, telling an attacker which framework to target — free reconnaissance you can remove. (Informational.)</p><div class='muted'>Proof (re-confirmed 2026-10-25 18:12 UTC):</div><pre>GET http://127.0.0.1:8099/</pre><div class='muted'>Response <code>200</code>:</div><pre>VulnLab
+/api/invoices/117
+/api/invoices/118
+/api/signup
+/api/me
+/redirect
+/app.js
+/api/calc
+/search
+/health
+</pre><div class='muted'>Checks confirmed:</div><ul><li>on a successful response</li><li>X-Powered-By still discloses &#x27;Express&#x27;</li></ul><div class='fix'><b>Fix:</b> Remove the X-Powered-By header (e.g. Express: `app.disable(&#x27;x-powered-by&#x27;)`) and suppress versioned Server banners.</div></div></section>
+  
+  <section><h2>Discovered routes</h2>
+    <table><thead><tr><th>Method</th><th>Route</th><th>Status</th><th></th></tr></thead><tr><td class='mono'>GET</td><td class='mono'>/</td><td class='mono'>[200]</td><td></td></tr><tr><td class='mono'>GET</td><td class='mono'>/api</td><td class='mono'>[404]</td><td></td></tr><tr><td class='mono'>GET</td><td class='mono'>/api/calc</td><td class='mono'>[500]</td><td></td></tr><tr><td class='mono'>GET</td><td class='mono'>/api/invoices/{id}</td><td class='mono'>[401]</td><td>object</td></tr><tr><td class='mono'>GET</td><td class='mono'>/api/me</td><td class='mono'>[200]</td><td></td></tr><tr><td class='mono'>GET</td><td class='mono'>/api/signup</td><td class='mono'>[405]</td><td></td></tr><tr><td class='mono'>GET</td><td class='mono'>/app.js</td><td class='mono'>[200]</td><td></td></tr><tr><td class='mono'>GET</td><td class='mono'>/health</td><td class='mono'>[200]</td><td></td></tr><tr><td class='mono'>GET</td><td class='mono'>/redirect</td><td class='mono'>[400]</td><td></td></tr><tr><td class='mono'>GET</td><td class='mono'>/search</td><td class='mono'>[200]</td><td></td></tr></table></section>
+</div>
+<footer>Generated by Vibe Check — a light pre-launch audit. Not a substitute for a full pentest.</footer>
+</body></html>

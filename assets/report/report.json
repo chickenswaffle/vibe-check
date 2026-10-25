@@ -1,0 +1,330 @@
+{
+  "target": "http://127.0.0.1:8099",
+  "generated_at": "2026-10-25T18:13:30.468115+00:00",
+  "authorization": "VulnLab sandbox (localhost demo)",
+  "summary": {
+    "confirmed": 19,
+    "suspected": 0,
+    "by_severity": {
+      "medium": 8,
+      "info": 1,
+      "critical": 7,
+      "high": 3
+    }
+  },
+  "findings": [
+    {
+      "id": "sensitive-file:/.env",
+      "class": "sensitive-file-exposure",
+      "severity": "critical",
+      "status": "confirmed",
+      "title": "Exposed .env file (secrets served from web root)",
+      "why_it_matters": "Your .env \u2014 database URLs, API keys, JWT secrets \u2014 is downloadable by anyone.",
+      "remediation": "Stop serving dotfiles from the web root, move secrets out of the served directory, and ROTATE every key that was exposed.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/.env",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:12:49.669060+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "backup-file:/backup.sql",
+      "class": "backup-file-exposure",
+      "severity": "critical",
+      "status": "confirmed",
+      "title": "Exposed SQL database dump (backup.sql)",
+      "why_it_matters": "/backup.sql is downloadable by anyone \u2014 a database dump or config backup hands over your data and secrets wholesale.",
+      "remediation": "Remove backup/dump files from the web root and block dotfile/backup extensions at the web server; rotate anything exposed.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/backup.sql",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:12:50.268849+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "client-secret:Stripe secret key",
+      "class": "client-secret-exposure",
+      "severity": "critical",
+      "status": "confirmed",
+      "title": "Stripe secret key exposed in client code",
+      "why_it_matters": "A Stripe SECRET key is shipped to the browser \u2014 anyone who views source can charge cards and issue refunds on your account.",
+      "remediation": "Move the secret key server-side, use only the publishable key client-side, and rotate the exposed key now.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/app.js",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:12:52.068981+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "client-secret:AWS access key id",
+      "class": "client-secret-exposure",
+      "severity": "critical",
+      "status": "confirmed",
+      "title": "AWS access key id exposed in client code",
+      "why_it_matters": "An AWS access key id is embedded in client code \u2014 a path to full cloud-account abuse if the secret is nearby or reused.",
+      "remediation": "Remove AWS credentials from the frontend and rotate the key immediately.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/app.js",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:12:52.269484+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "weak-reset-token:GET:/password-reset",
+      "class": "weak-reset-token",
+      "severity": "critical",
+      "status": "confirmed",
+      "title": "Guessable password-reset token on /password-reset",
+      "why_it_matters": "The reset token is only 9 characters (low entropy, brute-forceable), so an attacker can guess it outright. A leaked or guessable reset token is full account takeover \u2014 the single most damaging bug a vibe-coded auth flow ships with.",
+      "remediation": "Never return the reset token in the API response \u2014 email a link to the registered address only. Use a cryptographically random token (>=32 chars), single-use, short-lived, and rate-limit the reset endpoint.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/password-reset?email=vibe-check-probe@example.com",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:13:27.670050+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "weak-reset-token:GET:/api/password/forgot",
+      "class": "weak-reset-token",
+      "severity": "critical",
+      "status": "confirmed",
+      "title": "Password-reset token exposed in the response on /api/password/forgot",
+      "why_it_matters": "The reset token is returned in the HTTP response instead of being emailed, so anyone who can call this endpoint can take over the account. A leaked or guessable reset token is full account takeover \u2014 the single most damaging bug a vibe-coded auth flow ships with.",
+      "remediation": "Never return the reset token in the API response \u2014 email a link to the registered address only. Use a cryptographically random token (>=32 chars), single-use, short-lived, and rate-limit the reset endpoint.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/api/password/forgot?email=vibe-check-probe@example.com",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:13:28.068122+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "idor:/api/invoices/{id}",
+      "class": "idor",
+      "severity": "critical",
+      "status": "confirmed",
+      "title": "Cross-account object read (IDOR/BOLA) on /api/invoices/{id}",
+      "why_it_matters": "Two different logged-in users (alice and bob) receive the same private object at /api/invoices/117. The endpoint never checks ownership, so any authenticated user can read anyone else's records.",
+      "remediation": "Enforce an ownership/authorization check (object.owner_id == the current user) before returning the object; return 403 otherwise.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/api/invoices/117",
+        "headers": {
+          "Authorization": "***masked***"
+        },
+        "confirmed_at": "2026-10-25T18:13:30.467466+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "cors:/api/me",
+      "class": "cors-misconfiguration",
+      "severity": "high",
+      "status": "confirmed",
+      "title": "CORS reflects any origin with credentials on /api/me",
+      "why_it_matters": "The endpoint echoes any website's Origin and allows credentials, so a malicious site can read this authenticated response from a logged-in user's browser.",
+      "remediation": "Never reflect the Origin header. Allow only an explicit allowlist of trusted origins, and don't combine a wildcard origin with credentials.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/api/me",
+        "headers": {
+          "Origin": "https://evil.example"
+        },
+        "confirmed_at": "2026-10-25T18:12:53.469397+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "reflected-input:/search:q",
+      "class": "reflected-input",
+      "severity": "high",
+      "status": "confirmed",
+      "title": "Reflected input (likely XSS) via ?q= on /search",
+      "why_it_matters": "The `q` parameter is reflected into the HTML response unencoded, so an attacker can inject script and run it in a victim's browser (reflected XSS).",
+      "remediation": "Context-encode all user input on output (HTML-escape), and add a Content-Security-Policy as defense in depth.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/search?q=vck9z%3Csvg/onload%3D1%3E",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:13:12.067964+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "debug-disclosure:/api/calc",
+      "class": "debug-disclosure",
+      "severity": "high",
+      "status": "confirmed",
+      "title": "Stack trace / debug output leaked on /api/calc",
+      "why_it_matters": "The app returns internal stack traces or debug pages to clients, exposing file paths, framework internals and sometimes secrets \u2014 and it usually means debug mode is enabled in production.",
+      "remediation": "Turn off debug mode in production and return generic error pages; log the details server-side only.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/api/calc",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:13:20.467599+00:00",
+        "response_status": 500
+      }
+    },
+    {
+      "id": "security-headers",
+      "class": "security-headers",
+      "severity": "medium",
+      "status": "confirmed",
+      "title": "Missing security headers (x-content-type-options, x-frame-options, content-security-policy, referrer-policy)",
+      "why_it_matters": "Without these headers the app is exposed in the browser to MIME-type sniffing, clickjacking, cross-site scripting and content injection, leaking URLs to third parties via the Referer header \u2014 cheap, high-value hardening a vibe-coded app almost always skips.",
+      "remediation": "Send `X-Content-Type-Options: nosniff`. Send `X-Frame-Options: DENY` (or a CSP `frame-ancestors 'none'`). Add a restrictive `Content-Security-Policy`, e.g. `default-src 'self'`. Send `Referrer-Policy: strict-origin-when-cross-origin`.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:12:49.068929+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "insecure-cookie:session",
+      "class": "insecure-cookie",
+      "severity": "medium",
+      "status": "confirmed",
+      "title": "Session cookie 'session' set without HttpOnly",
+      "why_it_matters": "The 'session' cookie is readable from JavaScript, so any XSS on the site can steal the session and impersonate the user.",
+      "remediation": "Set the cookie with HttpOnly (and Secure + SameSite): e.g. `Set-Cookie: session=...; HttpOnly; Secure; SameSite=Lax`.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/login",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:12:54.669215+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "open-redirect:/redirect:url",
+      "class": "open-redirect",
+      "severity": "medium",
+      "status": "confirmed",
+      "title": "Open redirect via ?url= on /redirect",
+      "why_it_matters": "The `url` parameter sends users to any URL, so an attacker can craft a link on your domain that lands victims on a phishing site.",
+      "remediation": "Redirect only to a known allowlist of internal paths, or validate the target is same-origin before redirecting.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/redirect?url=https%3A%2F%2Fevil.example%2F",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:13:18.867265+00:00",
+        "response_status": 302
+      }
+    },
+    {
+      "id": "graphql-introspection:/graphql",
+      "class": "graphql-introspection",
+      "severity": "medium",
+      "status": "confirmed",
+      "title": "GraphQL introspection enabled on /graphql",
+      "why_it_matters": "Introspection is on, so anyone can download your full GraphQL schema \u2014 every type, field and mutation \u2014 making the rest of the API trivial to attack.",
+      "remediation": "Disable introspection in production (e.g. the GraphQL server's introspection flag), or gate it behind authentication.",
+      "proof": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8099/graphql",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "confirmed_at": "2026-10-25T18:13:22.468244+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "exposed-mgmt:/metrics",
+      "class": "exposed-management-endpoint",
+      "severity": "medium",
+      "status": "confirmed",
+      "title": "Prometheus metrics endpoint exposed",
+      "why_it_matters": "Operational metrics (and often internal hostnames and counts) are public.",
+      "remediation": "Require authentication for /metrics or bind it to an internal network only.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/metrics",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:13:22.668673+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "directory-listing:/files/",
+      "class": "directory-listing",
+      "severity": "medium",
+      "status": "confirmed",
+      "title": "Open directory listing at /files/",
+      "why_it_matters": "Anyone can browse every file under /files/ \u2014 including backups, dumps and source that were never meant to be downloadable.",
+      "remediation": "Turn off directory autoindex (e.g. nginx `autoindex off`) and serve an explicit index or 403 instead.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/files/",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:13:24.067209+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "exposed-config:/docker-compose.yml",
+      "class": "exposed-config-file",
+      "severity": "medium",
+      "status": "confirmed",
+      "title": "Exposed docker-compose.yml",
+      "why_it_matters": "/docker-compose.yml is downloadable, exposing your service layout, image/registry names and pipeline \u2014 and sometimes embedded secrets.",
+      "remediation": "Don't deploy CI/infra config to the web root; block these filenames at the web server.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/docker-compose.yml",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:13:25.667185+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "host-header-injection:/password-reset",
+      "class": "host-header-injection",
+      "severity": "medium",
+      "status": "confirmed",
+      "title": "Host header reflected on /password-reset",
+      "why_it_matters": "The app trusts the Host header to build absolute links, so an attacker can set Host to their domain and poison password-reset links or caches.",
+      "remediation": "Build absolute URLs from a configured canonical host, not the request Host header; validate Host against an allowlist.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/password-reset",
+        "headers": {
+          "Host": "evil.example"
+        },
+        "confirmed_at": "2026-10-25T18:13:27.266768+00:00",
+        "response_status": 200
+      }
+    },
+    {
+      "id": "tech-disclosure:x-powered-by",
+      "class": "tech-disclosure",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Technology disclosed via X-Powered-By (Express)",
+      "why_it_matters": "The X-Powered-By header advertises 'Express', telling an attacker which framework to target \u2014 free reconnaissance you can remove. (Informational.)",
+      "remediation": "Remove the X-Powered-By header (e.g. Express: `app.disable('x-powered-by')`) and suppress versioned Server banners.",
+      "proof": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8099/",
+        "headers": {},
+        "confirmed_at": "2026-10-25T18:12:49.469078+00:00",
+        "response_status": 200
+      }
+    }
+  ],
+  "suspicions": []
+}
