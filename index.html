@@ -40,7 +40,7 @@
     <div class="tour-bar"><div role="tablist" aria-label="Explore the product workflow"><button id="tab-map" type="button" role="tab" aria-selected="true" aria-controls="tour-panel" data-view="map"><span>01</span> Map</button><button id="tab-evidence" type="button" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1" data-view="evidence"><span>02</span> Evidence</button><button id="tab-retest" type="button" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1" data-view="retest"><span>03</span> Re-test</button></div><button class="motion-button" id="motion-toggle" aria-pressed="false" type="button">Pause motion <span aria-hidden="true">Ⅱ</span></button></div>
     <div id="tour-panel" class="app-body" role="tabpanel" aria-labelledby="tab-map" data-view="map" data-finding="access">
       <div class="graph-pane">
-        <div class="graph-heading"><span class="live-pill"><span class="status-dot"></span><span id="graph-phase">Surface mapped</span></span><span class="graph-number">EXAMPLE SCOPE / 06 ROUTES</span></div>
+        <div class="graph-heading"><span class="live-pill"><span class="status-dot"></span><span id="graph-phase">Establishing context</span></span><span class="graph-number">EXAMPLE SCOPE / 06 ROUTES</span></div>
         <svg class="attack-graph" viewBox="0 0 720 440" role="img" aria-labelledby="graph-title graph-description">
           <title id="graph-title">Illustrative application attack graph</title><desc id="graph-description">A sample application connects to six routes. Highlighted branches illustrate an access-rule mismatch, hardening observations and a reset-flow review candidate. No real target is scanned.</desc>
           <defs><radialGradient id="graph-glow"><stop stop-color="#1ecad3" stop-opacity=".12"/><stop offset="1" stop-color="#1ecad3" stop-opacity="0"/></radialGradient><pattern id="dot-grid" width="25" height="25" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="#344150" opacity=".48"/></pattern><filter id="node-glow"><feGaussianBlur stdDeviation="4"/></filter></defs>
@@ -57,10 +57,20 @@
           <g class="route-node"><circle cx="520" cy="351" r="7"/><text x="520" y="379">/health</text></g>
           <g class="route-node"><circle cx="174" cy="350" r="8"/><text x="174" y="326">/password-reset</text></g>
           <g class="route-node"><circle cx="116" cy="225" r="7"/><text x="116" y="254">/app.js</text></g>
+          <g class="journey-paths" fill="none" aria-hidden="true"><path class="journey-track" d="M350 223 177 110"/><path class="journey-trace animated" pathLength="100" d="M350 223 177 110"/></g>
+          <g class="journey-packet animated" aria-hidden="true"><circle class="packet-halo" cx="350" cy="223" r="10"/><circle cx="350" cy="223" r="3.5"/></g>
+          <g class="context-check" aria-hidden="true"><path d="M350 223 520 98"/><circle cx="520" cy="98" r="16"/></g>
+          <g class="response-chip" aria-hidden="true" transform="translate(120 158)"><rect width="114" height="27" rx="5"/><text x="57" y="17" id="response-label">200 · OWNER</text></g>
           <g class="app-core"><circle class="core-ring animated" cx="350" cy="223" r="56"/><circle cx="350" cy="223" r="43"/><path d="m334 222 11 11 22-23"/><text x="350" y="297">YOUR APP</text></g>
           <g class="repair-node"><rect x="49" y="30" width="142" height="45" rx="9"/><text x="120" y="58">403 · ACCESS DENIED</text></g>
         </svg>
-        <div class="graph-legend"><span><i class="cyan-dot"></i>Observed route</span><span><i class="pink-dot"></i>Review signal</span><span class="graph-footnote">Illustrative topology</span></div>
+        <div class="sequence" aria-label="Illustrated assessment walkthrough">
+          <div class="sequence-top"><span class="sequence-label">FOLLOW THE EVIDENCE</span><span id="sequence-counter">01 / 03</span><button type="button" id="replay-sequence" aria-label="Replay illustrated walkthrough">Replay <span aria-hidden="true">↺</span></button></div>
+          <div class="sequence-steps" role="group" aria-label="Illustration steps; select a step to pause and inspect it"><button type="button" data-step="0" aria-pressed="true"><span>01</span><b>Establish context</b></button><button type="button" data-step="1" aria-pressed="false"><span>02</span><b>Compare response</b></button><button type="button" data-step="2" aria-pressed="false"><span>03</span><b>Review the rule</b></button></div>
+          <div class="sequence-caption"><span class="sequence-marker" aria-hidden="true"></span><p id="sequence-copy">The owner account establishes which private record this rule protects.</p></div>
+          <div class="sequence-progress" aria-hidden="true"><i></i></div>
+        </div>
+        <div class="graph-legend"><span><i class="cyan-dot"></i>Observed route</span><span><i class="pink-dot"></i>Review signal</span><span class="graph-footnote">Select a step to inspect</span></div>
       </div>
       <aside class="inspector" aria-label="Sample assessment inspector">
         <div class="inspector-heading"><span id="inspector-kicker">REVIEW SIGNALS</span><span class="outline-chip" id="inspector-count">03</span></div>
