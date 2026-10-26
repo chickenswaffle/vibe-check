@@ -59,6 +59,57 @@
       ["Context healthy", "Checking the account context", "Fresh account-health checks bracket the comparison. Repair credit needs the original rule, healthy identities and complete evidence.", "hold"]
     ]
   };
+  // Authored sample events only. No CLI, model or HTTP request runs on this page.
+  const traces = {
+    access: [
+      { command: "access-rule / owner baseline", title: "Establish the expected reader.", why: "A status code is not enough. First, the sample checks that the owner receives the exact private marker.", capture: "OWNER RESPONSE", http: 'GET /api/invoices/demo-42 HTTP/1.1\nHost: example.test\n\nHTTP/1.1 200 OK\n{"marker":"sample-record"}', events: [["scope", "target=example.test · read-only sample"], ["context", "identity=owner · private-record rule"], ["request", "GET /api/invoices/demo-42 [owner]"], ["response", "200 OK · private marker present"], ["compare", "baseline retained for reader comparison"]] },
+      { command: "access-rule / forbidden reader", title: "Compare content across identities.", why: "A shared 200 response can be legitimate. Here the same private marker crosses an explicit forbidden-reader boundary.", capture: "FORBIDDEN READER RESPONSE", http: 'GET /api/invoices/demo-42 HTTP/1.1\nHost: example.test\n\nHTTP/1.1 200 OK\n{"marker":"sample-record"}', events: [["context", "identity=forbidden-reader · expected=deny"], ["request", "GET /api/invoices/demo-42 [reader]"], ["response", "200 OK · same private marker returned"], ["compare", "owner marker == reader marker"], ["review", "access-rule mismatch · inspect context"]] },
+      { command: "access-rule / evidence review", title: "Keep the proof attached to the rule.", why: "The comparison supports this supplied rule. Business context and human review determine the final finding and impact.", capture: "CAPTURE PAIR / NO NEW REQUEST", http: 'SAVED COMPARISON (synthetic)\nowner  -> 200 · marker present\nreader -> 200 · same marker\nrule   -> reader must be denied\nnext   -> contextual review', events: [["scope", "rule=private-record · same route + object"], ["compare", "owner=200 · reader=200 · marker=equal"], ["context", "business expectation needs review"], ["review", "attach capture pair to access-rule lead"], ["hold", "human review · no automatic risk claim"]] }
+    ],
+    headers: [
+      { command: "response-hardening / capture", title: "Start with the actual response.", why: "Inspect the document response rather than guessing from a framework name. The example uses a saved, read-only page capture.", capture: "DOCUMENT RESPONSE", http: 'GET / HTTP/1.1\nHost: example.test\n\nHTTP/1.1 200 OK\nContent-Type: text/html\nX-Content-Type-Options: nosniff', events: [["scope", "target=example.test · route=/"], ["request", "GET / · document response"], ["response", "200 OK · content-type=text/html"], ["context", "retain response headers for inspection"], ["compare", "evaluate relevant browser protections"]] },
+      { command: "response-hardening / header review", title: "Separate absence from exploitation.", why: "This sample lacks a Content-Security-Policy header. That is observable; exploitability still depends on document and browser context.", capture: "SAVED HEADERS / NO NEW REQUEST", http: 'SAVED HEADERS (synthetic)\nContent-Type: text/html\nX-Content-Type-Options: nosniff\n\nContent-Security-Policy: [absent]\nImpact: not established', events: [["context", "inspect saved response · no new request"], ["compare", "Content-Security-Policy header absent"], ["compare", "X-Content-Type-Options=nosniff present"], ["review", "configuration observation · assess context"], ["hold", "missing protection != demonstrated exploit"]] },
+      { command: "response-hardening / impact context", title: "Explain what the signal can support.", why: "Document behavior, existing controls and deployment context affect impact. The trace leaves that decision open for review.", capture: "REVIEW RECORD / NO NEW REQUEST", http: 'REVIEW RECORD (synthetic)\nobservation: CSP header absent\ndocument: HTML response\nexploit: not demonstrated\nnext: contextual hardening review', events: [["scope", "review applies to captured document only"], ["context", "browser + document + deployment matter"], ["review", "other controls may affect the impact"], ["review", "record observation and review limits"], ["hold", "hardening review · severity not inferred"]] }
+    ],
+    reset: [
+      { command: "reset-flow / saved capture", title: "Inspect without triggering a reset.", why: "This is passive review of existing output. The walkthrough sends no forgot-password request and triggers no email.", capture: "EXISTING CAPTURE / PASSIVE ONLY", http: 'SAVED OUTPUT (synthetic)\nsource: existing response capture\nroute: /password-reset\nvalue: [token-shaped sample]\nrequest sent: no', events: [["scope", "mode=passive · saved capture only"], ["context", "READ existing /password-reset output"], ["compare", "token-shaped sample value observed"], ["review", "issuance + validity not established"], ["hold", "no email · no redemption · no request"]] },
+      { command: "reset-flow / candidate analysis", title: "A token shape is only a lead.", why: "A field can resemble a token without being a credential. Its origin, purpose and usability remain unverified.", capture: "CANDIDATE RECORD / NO HTTP REQUEST", http: 'CANDIDATE (synthetic)\nshape: token-like output\ncredential: not established\nusable: not tested\naccount takeover: not established', events: [["context", "inspect saved output · no active probe"], ["compare", "token-like shape != usable credential"], ["review", "origin + flow context still unknown"], ["hold", "candidate=unverified · no takeover claim"], ["hold", "no token redeemed · no outbound request"]] },
+      { command: "reset-flow / review boundary", title: "Preserve uncertainty in the report.", why: "An unverified lead must stay distinct from a confirmed flaw. The sample records the limit without inventing proof.", capture: "REVIEW RECORD / NO HTTP REQUEST", http: 'REVIEW RECORD (synthetic)\nstate: unverified candidate\nevidence: existing capture only\ncredential usability: unknown\nnext: authorized contextual review', events: [["scope", "evidence limited to existing capture"], ["context", "reset flow requires application context"], ["review", "do not promote shape to exploit proof"], ["hold", "report state=unverified candidate"], ["hold", "no account-takeover conclusion"]] }
+    ],
+    retest: [
+      { command: "re-test / original owner baseline", title: "A missing object is not a repair.", why: "The original owner must still receive the private marker. Fresh identity context starts the comparison before the reader is checked.", capture: "ORIGINAL OWNER RESPONSE", http: 'GET /api/invoices/demo-42 HTTP/1.1\nHost: example.test\n\nHTTP/1.1 200 OK\n{"marker":"sample-record"}', events: [["scope", "same rule + route + original object"], ["context", "pre-check: supplied identities healthy"], ["request", "GET /api/invoices/demo-42 [owner]"], ["response", "200 OK · original marker still present"], ["compare", "owner baseline survives the repair"]] },
+      { command: "re-test / repeat reader denial", title: "Require an actual denial, twice.", why: "Both sample reader attempts return supported denials. Network errors and an absent finding would leave the repair unverified.", capture: "FORBIDDEN READER / TWO ATTEMPTS", http: 'GET /api/invoices/demo-42 HTTP/1.1\nHost: example.test\n\nHTTP/1.1 403 Forbidden\n{"error":"access denied"}\nrepeat: 403 · marker absent', events: [["context", "same forbidden reader + original rule"], ["request", "GET /api/invoices/demo-42 [reader]"], ["response", "attempt 1: 403 · private marker absent"], ["response", "attempt 2: 403 · private marker absent"], ["compare", "two supported denials · no error credit"]] },
+      { command: "re-test / identity-context closure", title: "Check that the accounts still work.", why: "Post-checks keep expired sessions from masquerading as a fix. This illustration completes the comparison with distinct, healthy identities.", capture: "IDENTITY POST-CHECK / TWO CONTEXTS", http: 'GET /api/me HTTP/1.1\nHost: example.test\n\nowner context: 200 · owner identity\nreader context: 200 · reader identity\nidentities: distinct + expected', events: [["request", "GET /api/me [owner + reader contexts]"], ["response", "both healthy · distinct expected identities"], ["compare", "pre/post context stable · rule unchanged"], ["compare", "owner marker retained + reader denied x2"], ["review", "illustrated negative evidence complete"]] }
+    ]
+  };
+  const traceOffsets = [0, 900, 1800, 2900, 4100];
+  let traceShown = 0;
+  function renderTrace(time) {
+    const count = traceOffsets.filter(offset => offset <= time).length;
+    if (count <= traceShown) return;
+    traceShown = count;
+    const key = panel.dataset.view === "retest" ? "retest" : panel.dataset.finding;
+    const events = traces[key].slice(0, step + 1).flatMap((scene, stage) => scene.events.slice(0, stage === step ? count : 5).map((event, index) => ({ event, stage, offset: traceOffsets[index] })));
+    const lines = document.createDocumentFragment();
+    events.slice(-6).forEach(({ event, stage, offset }, index, entries) => {
+      const line = document.createElement("li"); line.dataset.kind = event[0];
+      if (index === entries.length - 1) line.className = "trace-latest";
+      const timestamp = document.createElement("span"); timestamp.className = "trace-time";
+      timestamp.textContent = "+" + ((stage * sceneDuration + offset) / 1000).toFixed(2).padStart(5, "0");
+      const tag = document.createElement("span"); tag.className = "trace-tag"; tag.textContent = event[0].toUpperCase();
+      const message = document.createElement("code"); message.textContent = event[1];
+      line.append(timestamp, tag, message); lines.append(line);
+    });
+    $("#trace-lines").replaceChildren(lines);
+    const viewport = $(".trace-scroll"); viewport.scrollTop = viewport.scrollHeight;
+    $("#trace-event-count").textContent = String(events.length).padStart(2, "0") + " / 15";
+  }
+  document.querySelectorAll("[data-trace-view]").forEach(button => button.addEventListener("click", () => {
+    const http = button.dataset.traceView === "http";
+    $("#trace-why").hidden = http; $("#trace-http").hidden = !http;
+    if (http) { paused = true; renderTrace(sceneDuration); showMotion(); }
+    document.querySelectorAll("[data-trace-view]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+  }));
   const stepButtons = [...document.querySelectorAll("button[data-step]")];
   let step = 0;
   let elapsed = 0;
@@ -84,6 +135,14 @@
     $("#sequence-counter").textContent = "0" + (index + 1) + " / 03";
     $("#sequence-copy").textContent = scene[2];
     $("#graph-phase").textContent = scene[1];
+    const trace = traces[key][index];
+    $("#trace-command").textContent = trace.command;
+    $("#trace-reason-title").textContent = trace.title;
+    $("#trace-reason").textContent = trace.why;
+    $("#trace-capture-label").textContent = "SYNTHETIC / " + trace.capture;
+    $("#trace-payload").textContent = trace.http;
+    traceShown = 0;
+    renderTrace(paused || preference.matches ? sceneDuration : 0);
   }
   function selectView(view, finding) { render(view, finding); showStep(0); }
   tabs.forEach((tab, index) => {
@@ -110,11 +169,13 @@
     lastFrame = timestamp;
     if (elapsed >= sceneDuration) showStep((step + 1) % 3);
     panel.style.setProperty("--scene-progress", (elapsed / sceneDuration * 100) + "%");
+    renderTrace(elapsed);
     frame = requestAnimationFrame(advance);
   }
   function syncMotion() {
     const stopped = paused || preference.matches || !visible || document.hidden;
     document.body.classList.toggle("motion-paused", stopped);
+    $("#trace-state").textContent = preference.matches ? "Static" : paused ? "Paused" : !visible || document.hidden ? "On hold" : "Playing";
     if (stopped && frame !== null) { cancelAnimationFrame(frame); frame = null; lastFrame = null; }
     if (!stopped && frame === null) { lastFrame = null; frame = requestAnimationFrame(advance); }
   }
@@ -124,16 +185,21 @@
     motion.replaceChildren(document.createTextNode(preference.matches ? "Motion off " : paused ? "Play walkthrough " : "Pause walkthrough "));
     const icon = document.createElement("span"); icon.setAttribute("aria-hidden", "true"); icon.textContent = preference.matches ? "○" : paused ? "▶" : "Ⅱ"; motion.append(icon);
     motion.disabled = preference.matches;
+    $("#trace-toggle").disabled = preference.matches;
+    $("#trace-toggle").setAttribute("aria-pressed", String(paused));
+    $("#trace-toggle").setAttribute("aria-label", preference.matches ? "Sample trace is static for reduced motion" : paused ? "Play sample trace" : "Pause sample trace");
+    $("#trace-control-icon").textContent = preference.matches ? "○" : paused ? "▶" : "Ⅱ";
     motion.setAttribute("aria-label", preference.matches ? "Animation disabled by your reduced-motion preference" : paused ? "Play illustrated walkthrough" : "Pause illustrated walkthrough");
   }
   preference.addEventListener("change", () => { paused = preference.matches; showMotion(); });
   showStep(0); showMotion();
   motion.addEventListener("click", () => { paused = !paused; showMotion(); });
+  $("#trace-toggle").addEventListener("click", () => { paused = !paused; showMotion(); });
   stepButtons.forEach(button => button.addEventListener("click", () => {
     paused = true; showStep(Number(button.dataset.step)); showMotion();
   }));
   $("#replay-sequence").addEventListener("click", () => {
-    showStep(0); paused = preference.matches; showMotion();
+    paused = preference.matches; showStep(0); showMotion();
   });
   const observer = new IntersectionObserver(entries => {
     visible = entries[0].isIntersecting; syncMotion();

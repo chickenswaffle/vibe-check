@@ -78,6 +78,21 @@
         <div class="inspector-detail" aria-live="polite" aria-atomic="true"><span class="detail-status" id="detail-status">EXAMPLE OBSERVATION</span><h3 id="detail-title">A private record crosses an account boundary.</h3><p id="detail-copy">In this sample, a supplied forbidden reader receives the owner's private marker. Inspect the expectation and the response evidence together.</p><div class="evidence-lines" id="evidence-lines"><div><span>Owner account</span><b>200 · private marker</b></div><div><span>Forbidden reader</span><b class="pink-text">200 · same marker</b></div></div></div>
         <div class="inspector-footer"><span class="tiny-cross">+</span><span id="inspector-footer">A signal starts a review. It never replaces one.</span></div>
       </aside>
+      <section class="trace-console" aria-labelledby="trace-title">
+        <div class="trace-titlebar"><h3 id="trace-title"><span aria-hidden="true">&gt;_</span> Assessment trace</h3><span class="trace-sample">SYNTHETIC PLAYBACK</span><button type="button" class="trace-state" id="trace-toggle" aria-pressed="false" aria-label="Pause sample trace"><i aria-hidden="true"></i><span id="trace-state">Playing</span><b aria-hidden="true" id="trace-control-icon">Ⅱ</b></button></div>
+        <div class="trace-body">
+          <div class="trace-terminal">
+            <div class="trace-command"><span aria-hidden="true">demo ›</span><span id="trace-command">access-rule / owner baseline</span><span class="terminal-cursor" aria-hidden="true"></span></div>
+            <div class="trace-scroll" tabindex="0" role="region" aria-label="Synthetic technical trace; timestamps are playback positions" aria-live="off"><ol id="trace-lines"><li data-kind="scope"><span class="trace-time">+00.00</span><span class="trace-tag">SCOPE</span><code>target=example.test · read-only sample</code></li></ol></div>
+          </div>
+          <div class="trace-insight"><div class="trace-insight-top"><span>BEHIND THE CHECK</span><div role="group" aria-label="Technical explanation view"><button type="button" data-trace-view="why" aria-pressed="true" aria-controls="trace-why">Why</button><button type="button" data-trace-view="http" aria-pressed="false" aria-controls="trace-http">HTTP</button></div></div><div id="trace-why"><h4 id="trace-reason-title">Establish the expected reader.</h4><p id="trace-reason">A status code is not enough. The sample first checks that the owner receives the exact private marker.</p></div><div id="trace-http" hidden><span class="trace-capture-label" id="trace-capture-label">SYNTHETIC HTTP CAPTURE / OWNER</span><pre id="trace-payload" tabindex="0" aria-label="Synthetic HTTP capture">GET /api/invoices/demo-42 HTTP/1.1
+Host: example.test
+
+HTTP/1.1 200 OK
+{"marker":"sample-record"}</pre></div></div>
+        </div>
+        <div class="trace-footer"><span><span id="trace-event-count">01 / 15</span> sample events <span aria-hidden="true">·</span> timestamps = playback position</span><span>0 scan requests sent</span></div>
+      </section>
     </div>
     <div class="app-statusbar"><span><span class="status-dot"></span><span id="status-text">Choose a review signal, then inspect its evidence</span></span><span>SIMULATED PREVIEW / NO NETWORK SCAN</span></div>
   </div>
